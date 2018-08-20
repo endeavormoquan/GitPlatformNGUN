@@ -6,3 +6,6 @@ For more information about this project, See http://blog.leanote.com/moquan or h
 
 Supported by NGUNLAB, as well as Dr. Zhang and Dr. Yuan. Developed by Qimin Ding.
 
+# Change Log
+
+created the framework, including hbase, hdfd, kafka, storm, topology and utils.
