@@ -22,7 +22,7 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseBasicBolt;
 import org.apache.storm.tuple.Tuple;
 
-import Utils.HbaseBoltUtil;
+import cn.colony.lab.Utils.HbaseBoltUtil;
 
 /**
  * create two tables(small one for each sat and big one for whole satas) if not exist.
