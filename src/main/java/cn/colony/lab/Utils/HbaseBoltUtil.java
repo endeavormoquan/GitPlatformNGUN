@@ -90,14 +90,14 @@ public class HbaseBoltUtil {
 		JSONObject jsonObject = JSONObject.parseObject(jsonString);
 		HashMap<String, HashMap<String, String>> rootmap = new HashMap<>();
 		JSONObject containerFirst = jsonObject.getJSONObject("xmlroot");
-		Set<String> jsonSetFirst = containerFirst.keySet();//获取第一层keys
+		Set<String> jsonSetFirst = containerFirst.keySet();//获取第一层keys，其实就是列族名
 		for (String str : jsonSetFirst){//通过第一层keys遍历第一层
 			JSONObject containerSecond = containerFirst.getJSONObject(str);//获取第二层json object
-			Set<String> jsonSetSecond = containerSecond.keySet();//获取第二层keys
+			Set<String> jsonSetSecond = containerSecond.keySet();//获取第二层keys，列限定符
 			HashMap<String, String> branchmap = new HashMap<>();
 			for (String key : jsonSetSecond){//遍历第二层
-				String value = containerSecond.getString(key);
-				LOG.info(key + ":" + value);
+				String value = containerSecond.getString(key);//列限定符中的数据
+//				LOG.info(key + ":" + value);
 				branchmap.put(key, value);
 			}
 			rootmap.put(str, branchmap);
