@@ -33,7 +33,7 @@ public class MyTopology {
 		
 		//create a kafka spout
 		String zks = "master:2181";
-		String topic = "platform3";
+		String topic = "platform1";
 		String zkRoot = "/storm";
 		String id = UUID.randomUUID().toString();
 		String brokerPath = "/kafka/brokers";
