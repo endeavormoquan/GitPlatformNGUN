@@ -28,7 +28,7 @@
              	 	                implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
              		       		<transformer
             		                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-            		            	<mainClass></mainClass>
+            		            	<mainClass>cn.colony.lab.topology.MyTopology</mainClass>
             		        	</transformer>
              		   		</transformers>
             			</configuration>
@@ -221,7 +221,7 @@
     <dependency>
     	<groupId>org.apache.hadoop</groupId>
     	<artifactId>hadoop-client</artifactId>
-    	<version>2.7.3</version>
+    	<version>2.8.0</version>
     	<exclusions>
         	<exclusion>
             	<groupId>org.slf4j</groupId>
@@ -233,7 +233,7 @@
 	<dependency>
     	<groupId>org.apache.hadoop</groupId>
     	<artifactId>hadoop-hdfs</artifactId>
-    	<version>2.7.3</version>
+    	<version>2.8.0</version>
     	<exclusions>
         	<exclusion>
             	<groupId>org.slf4j</groupId>
@@ -245,7 +245,7 @@
 	<dependency>
     	<groupId>org.apache.hadoop</groupId>
     	<artifactId>hadoop-common</artifactId>
-    	<version>2.7.3</version>
+    	<version>2.8.0</version>
     	<exclusions>
         	<exclusion>
             	<groupId>org.slf4j</groupId>
@@ -257,7 +257,7 @@
 	<dependency>
     	<groupId>org.apache.hadoop</groupId>
     	<artifactId>hadoop-auth</artifactId>
-    	<version>2.7.3</version>
+    	<version>2.8.0</version>
     	<exclusions>
         	<exclusion>
             	<groupId>org.slf4j</groupId>
