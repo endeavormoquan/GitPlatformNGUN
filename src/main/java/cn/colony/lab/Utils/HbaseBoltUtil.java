@@ -16,9 +16,7 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 import com.alibaba.fastjson.JSONObject;
 
 /**
- * This is a singleton class, which hold some singleton variables.
- * call getAdmin(), getFamilies(), getSimpleDateFormat() to get them.
- * Besides, an util function 'parseJsonStringToHashmap' is offered.
+ * 单例类，提供getAdmin(), getFamilies(), getSimpleDateFormat()，同时提供将jsonString解析成hashmap的工具函数
  * @author ColonyAlbert
  *
  */
@@ -32,7 +30,7 @@ public class HbaseBoltUtil {
 	private static String[] families = null;
 	
 	/**
-	 * get the only one instance of Connection
+	 * 获得单例连接
 	 * @return hbase.client.Connection
 	 * @throws IOException
 	 */
@@ -49,7 +47,7 @@ public class HbaseBoltUtil {
 	}
 	
 	/**
-	 * get the only one instance of Admin
+	 * 获得单例管理员身份
 	 * @return hbase.client.Admin
 	 * @throws Exception
 	 */
@@ -62,7 +60,7 @@ public class HbaseBoltUtil {
 	}
 	
 	/**
-	 * get the singleton instance of families.
+	 * 单例列族
 	 * @return String[]
 	 */
 	public static String[] getFamilies(){
@@ -71,8 +69,9 @@ public class HbaseBoltUtil {
 		}
 		return families;
 	}
+	
 	/**
-	 * get the only one instance of SimpleDateFormat
+	 * 单例SimpleDateFormat
 	 * @return java.text.SimpleDateFormat
 	 */
 	public static SimpleDateFormat getSimpleDateFormat(){
@@ -83,7 +82,7 @@ public class HbaseBoltUtil {
 	}
 	
 	/**
-	 * get the hashmap for jsonString, suppose that the jsonString has only two steps.
+	 * 将jsonString转换成hashmap，假设jsonString只有两层
 	 * @param jsonString
 	 * @return a hashmap that contains two steps.
 	 */
