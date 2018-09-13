@@ -37,7 +37,7 @@ public class MyHbaseBolt extends BaseBasicBolt{
 	private Connection connection = null;
 	private Admin admin = null;
 	private SimpleDateFormat df = null;
-	private String dateReversed = null;
+	private String timeReversed = null;
 	private String rowKey = null;
 	private String[] families = {"baseinfo","datainfo"};//暂定hbase数据表有两个列族：基本信息和数据信息
 	
@@ -57,6 +57,7 @@ public class MyHbaseBolt extends BaseBasicBolt{
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			LOG.info("admin got failed");
 		}
 		df = new SimpleDateFormat("yyyyMMddHHmmss");
 		super.prepare(stormConf, context);
@@ -81,13 +82,13 @@ public class MyHbaseBolt extends BaseBasicBolt{
 		
 		//如果该卫星之前已经创建了表，那么就直接插入数据，到这一步时，一定有一个和该卫星对应的表
 		//采用翻转时间戳加上卫星名称的方式设计行键
-		dateReversed = new StringBuffer(df.format(new Date())).reverse().toString();
-		rowKey = dateReversed + hashMap.get("name");
+		timeReversed = new StringBuffer(df.format(new Date())).reverse().toString();
+		rowKey = timeReversed + hashMap.get("name");
 		Table table = connection.getTable(tableName);
 		Put p = new Put(Bytes.toBytes(rowKey));
 		//TODO 插入数据：测试时只看固定的几个tag，实际使用时，这里还要琢磨一下
 		p.addColumn(Bytes.toBytes(families[0]), Bytes.toBytes("name"), Bytes.toBytes(hashMap.get("name")));
-		p.addColumn(Bytes.toBytes(families[0]), Bytes.toBytes("date"), Bytes.toBytes(hashMap.get("date")));
+		p.addColumn(Bytes.toBytes(families[0]), Bytes.toBytes("time"), Bytes.toBytes(hashMap.get("time")));
 		p.addColumn(Bytes.toBytes(families[1]), Bytes.toBytes("data"), Bytes.toBytes(hashMap.get("data")));
 		table.put(p);
 		table.close();	
@@ -95,7 +96,7 @@ public class MyHbaseBolt extends BaseBasicBolt{
 	
 	@Test
 	public void jsonTest(){
-		String jsonString = "{\"satainfo\":{\"keys\":\"name:date:data\",\"date\":\"20180806095544\",\"data\":\"57f77471-e444-4baf-a489-dfa365cdb77d\",\"name\":\"sata1\"}}";
+		String jsonString = "{\"satainfo\":{\"keys\":\"name:time:data\",\"time\":\"20180806095544\",\"data\":\"57f77471-e444-4baf-a489-dfa365cdb77d\",\"name\":\"sata1\"}}";
 		System.out.println(jsonString);
 		JSONObject jsonObject = JSON.parseObject(jsonString);
 		String container = jsonObject.getJSONObject("satainfo").getString("keys");
