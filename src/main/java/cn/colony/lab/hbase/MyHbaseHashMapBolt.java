@@ -21,8 +21,13 @@ import org.apache.storm.topology.BasicOutputCollector;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseBasicBolt;
 import org.apache.storm.tuple.Tuple;
+import org.apache.storm.tuple.Values;
+import org.junit.Test;
+
+import com.alibaba.fastjson.JSONObject;
 
 import cn.colony.lab.Utils.HbaseBoltUtil;
+import cn.colony.lab.Utils.XmlToJsonUtil;
 
 /**
  * create two tables(small one for each sat and big one for whole satas) if not exist.
@@ -163,6 +168,35 @@ public class MyHbaseHashMapBolt extends BaseBasicBolt{
 		return p;
 	}
 	
+	@Test
+	public void testParseJsonStringToHashmap(){
+		String xml = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><xmlroot><tabletype>"+
+						"<typeid>1</typeid>"+
+						"</tabletype>"+
+						"<family><qualifier>data</qualifier></family></xmlroot>";
+		JSONObject jsonObject = null;
+		String jsonString = null;
+		try {
+			jsonObject = XmlToJsonUtil.xmltoJsonObject(xml);
+			jsonString = jsonObject.toString();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if (jsonString != null){
+			HashMap<String, HashMap<String, String>> rootmap = HbaseBoltUtil.parseJsonStringToHashmap(jsonString);
+			//遍历hashmap
+			for (Entry<String, HashMap<String, String>> entry1 : rootmap.entrySet()){
+				String familyName = entry1.getKey();
+				HashMap<String, String> value1 = entry1.getValue();
+				for (Entry<String, String> entry2 : value1.entrySet()){
+					String qualifier = entry2.getKey();
+					String data = entry2.getValue();
+					System.out.println(familyName+":"+qualifier+":"+data);
+				}
+			}
+		}
+	}
+	
 	@Override
 	public void execute(Tuple tuple, BasicOutputCollector collector) {
 		String input = tuple.getString(0);//收到的是json string
@@ -191,7 +225,6 @@ public class MyHbaseHashMapBolt extends BaseBasicBolt{
 	}
 
 	@Override
-	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-	}
+	public void declareOutputFields(OutputFieldsDeclarer declarer) {}
 
 }
