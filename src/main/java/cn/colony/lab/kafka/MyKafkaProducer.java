@@ -22,7 +22,6 @@ public class MyKafkaProducer {
         String str2 = "</name><time>";
         String str3 = "</time><data>";
         String str4 = "</data><keys>name:time:data</keys></satainfo>";
-        //TODO here to sent the testing message!
         for (int i = 0;i<1;i++){
         	String name = names[i%3];
         	time = new StringBuffer(df.format(new Date())).toString();
