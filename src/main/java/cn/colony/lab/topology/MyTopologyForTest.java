@@ -25,9 +25,9 @@ import cn.colony.lab.hdfs.MyHDFSBolt;
 import cn.colony.lab.kafka.MyKafkaBolt;
 import cn.colony.lab.storm.MyParseBolt;
 
-public class MyTopology {
+public class MyTopologyForTest {
 
-	private static final Log LOG = LogFactory.getLog(MyTopology.class);
+	private static final Log LOG = LogFactory.getLog(MyTopologyForTest.class);
 	
 	public static void main(String[] args) throws AlreadyAliveException, InvalidTopologyException, AuthorizationException{
 		
@@ -59,6 +59,6 @@ public class MyTopology {
 		Config conf = new Config();
 		conf.put(Config.NIMBUS_HOST, "master");
 		conf.setNumWorkers(4);
-		StormSubmitter.submitTopology(MyTopology.class.getSimpleName(), conf, builder.createTopology());
+		StormSubmitter.submitTopology(MyTopologyForTest.class.getSimpleName(), conf, builder.createTopology());
 	}
 }
