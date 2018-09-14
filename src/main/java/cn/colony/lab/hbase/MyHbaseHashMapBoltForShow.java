@@ -33,13 +33,12 @@ import cn.colony.lab.Utils.XmlToJsonUtil;
 
 public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 
-	private static final Log LOG = LogFactory.getLog(MyHbaseHashMapBolt.class);
+	private static final Log LOG = LogFactory.getLog(MyHbaseHashMapBoltForShow.class);
 	private static final long serialVersionUID = 3833590169869172234L;
 	private Admin admin = null;
 	private Connection connection = null;
 	private SimpleDateFormat df = null;
 	private String[] families = null;
-	private String dateReversed = null;
 	private String rowKey = null;
 
 	@Override
@@ -112,7 +111,7 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 		 			 id = 3:SatName	卫星实时数据
 	 * @throws IOException
 	 */
-	private void operateWithTable(HashMap<String, HashMap<String, String>> rootmap,String typeId) throws IOException{
+	private void operateWithTable(HashMap<String, HashMap<String, String>> rootmap,String typeId){
 		TableName tableName = null;
 		if (typeId.equals("1"))
 			tableName = TableName.valueOf(Bytes.toBytes("SatInf"));
@@ -121,7 +120,15 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 		else if (typeId.equals("3"))
 			tableName = TableName.valueOf(Bytes.toBytes(rootmap.get("satname").get("name")));
 		
-		boolean isTableExists = admin.tableExists(tableName);
+		LOG.info("tablename get from rootmap:"+tableName.toString());
+		boolean isTableExists = false;
+		try {
+			isTableExists = admin.tableExists(tableName);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			LOG.error("admin.tableExists failed");
+			e1.printStackTrace();
+		}
 		
 		if (isTableExists == false){
 			LOG.info("table:"+tableName+" does not exist,create now");
@@ -133,27 +140,31 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 			}
 		}
 		
-		if (admin.tableExists(tableName) == true){
-			if (typeId.equals("1")){
-				rowKey = rootmap.get("inf").get("satname");
-				Table table = connection.getTable(tableName);
+		try {
+			isTableExists = admin.tableExists(tableName);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			LOG.error("admin.tableExists failed");
+			e1.printStackTrace();
+		}
+		
+		if (isTableExists == true){
+			if (typeId.equals("1"))
+				rowKey = rootmap.get("inf").get("satname");				
+			else if (typeId.equals("2"))
+				rowKey = rootmap.get("inf").get("devname");
+			else if (typeId.equals("3"))
+				rowKey = new StringBuffer(df.format(new Date())).toString();
+			
+			Table table;
+			try {
+				table = connection.getTable(tableName);
 				Put p = getPut(rootmap, rowKey);		
 				table.put(p);
 				table.close();
-			}
-			else if (typeId.equals("2")){
-				rowKey = rootmap.get("inf").get("devname");
-				Table table = connection.getTable(tableName);
-				Put p = getPut(rootmap, typeId);
-				table.put(p);
-				table.close();
-			}
-			else if (typeId.equals("3")){
-				rowKey = new StringBuffer(df.format(new Date())).toString();
-				Table table = connection.getTable(tableName);
-				Put p = getPut(rootmap, typeId);
-				table.put(p);
-				table.close();
+			} catch (IOException e) {
+				LOG.error("connection.getTable failed or table.put or table.close failed");
+				e.printStackTrace();
 			}
 		}
 	}
@@ -161,7 +172,7 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 	@Override
 	public void execute(Tuple tuple, BasicOutputCollector collector) {
 		String input = tuple.getString(0);//收到的是json string
-		LOG.info("RECEIVED JSONSTRING: " + input);
+		LOG.info("received json string: " + input);
 		
 		//将得到的json string解析成有一层嵌套的hashmap
 		HashMap<String, HashMap<String, String>> rootmap = HbaseBoltUtil.parseJsonStringToHashmap(input);
@@ -174,6 +185,7 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 		 */
 		String typeId = rootmap.get("tabletype").get("typeid");
 		if (typeId != null){
+			LOG.info("tabletypeid get");
 			try{
 				operateWithTable(rootmap,typeId);
 			}catch (Exception e){
@@ -181,7 +193,7 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 			}
 		}
 		else{
-			LOG.warn("wrong jsonString or rootmap, no typeid found!");
+			LOG.error("wrong jsonString or rootmap, no typeid found!");
 		}
 	}
 
@@ -190,10 +202,20 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 
 	@Test
 	public void testParseJsonStringToHashmap(){
-		String xml = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><xmlroot><tabletype>"+
-						"<typeid>1</typeid>"+
-						"</tabletype>"+
-						"<family><qualifier>data</qualifier></family></xmlroot>";
+		String xml = null;
+        String str1 = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><xmlroot><tabletype><typeid>";//typeid
+        String str2 = "</typeid></tabletype><inf><satid>";//satid
+        String str3 = "</satid><satname>";//satname
+        String str4 = "</satname><mass>";//mass
+        String str5 = "</mass><aoc>";//aoc
+        String str6 = "</aoc></inf></xmlroot>";
+        String typeid = "1";
+        String satid = "123";
+        String satname = "FY2001";
+        String mass = "888";
+        String aoc = "0.2";
+        xml = str1+typeid+str2+satid+str3+satname+str4+mass+str5+aoc+str6;
+		
 		JSONObject jsonObject = null;
 		String jsonString = null;
 		try {
