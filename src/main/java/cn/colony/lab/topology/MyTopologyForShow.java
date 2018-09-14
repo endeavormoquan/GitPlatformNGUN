@@ -22,7 +22,7 @@ import cn.colony.lab.storm.MyParseBolt;
 
 public class MyTopologyForShow {
 
-	private static final Log LOG = LogFactory.getLog(MyTopologyForTest.class);
+	private static final Log LOG = LogFactory.getLog(MyTopologyForShow.class);
 	
 	public static void main(String[] args) throws AlreadyAliveException, InvalidTopologyException, AuthorizationException{
 		
