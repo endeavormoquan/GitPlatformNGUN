@@ -167,7 +167,7 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 		HashMap<String, HashMap<String, String>> rootmap = HbaseBoltUtil.parseJsonStringToHashmap(input);
 		
 		/**
-		 * 简单的数据完备性校验，每一次传来的数据都必须要有表类别信息，否则该条数据作废。表类别用来说明当前数据是何种数据
+		 * 简单的数据完备性校验，每一次传来的数据都必须要有表类别信息，否则该条数据作废。
 		 * id = 1:SatInf	记录每个卫星的基本信息
 		 * id = 2:TTCInf	记录每个测控站的基本信息
 		 * id = 3:SatName	卫星实时数据
