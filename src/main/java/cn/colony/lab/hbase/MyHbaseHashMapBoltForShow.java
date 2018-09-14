@@ -1,5 +1,6 @@
 package cn.colony.lab.hbase;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -49,7 +50,6 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 			admin = HbaseBoltUtil.getAdmin();
 			LOG.info("ADMIN GOT");
 			df = HbaseBoltUtil.getSimpleDateFormat();
-			families = HbaseBoltUtil.getFamilies();
 		} catch (Exception e) {
 			LOG.error("HBASE CONNECTION OR ADMIN GET FAILED");
 			e.printStackTrace();
@@ -57,102 +57,20 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 		super.prepare(stormConf, context);
 	}
 	
-	/**
-	 * create table that named with tableName, and the definition of families of the table comes from HbaseBoltUtil.class
-	 * @param tableName name of the table
-	 * @throws Exception
-	 */
-	private void createTable(TableName tableName) throws Exception{
-		//TODO create table here, small and big table.
-		HTableDescriptor descriptor = new HTableDescriptor(tableName);
-		for (String family : families){
-			HColumnDescriptor cd = new HColumnDescriptor(family);
-			descriptor.addFamily(cd);
-		}
-		admin.createTable(descriptor);
-	}
 	
 	/**
-	 * create tables for each sat, each sat differs from others with its id. data will be inserted into the table according to the hashmap
-	 * @param rootmap hashmap parsed from xml
-	 * @throws Exception
-	 */
-	private void operateWithSmallTable(HashMap<String, HashMap<String, String>> rootmap) throws Exception{	
-		//small table operation
-		//采用satid作为表名
-		TableName tableName = TableName.valueOf(rootmap.get("satinfo").get("satid").getBytes());
-		boolean isTableExists = admin.tableExists(tableName);
-		
-		if (isTableExists == false){
-			LOG.info("SMALL TABLE:" + tableName.getNameAsString() + "DOES NOT EXIST, CREATE NOW");
-			try{
-				createTable(tableName);
-			}catch (Exception e){			
-				e.printStackTrace();
-				LOG.fatal("TABLE CREATED FAILED");
-			}
-		}
-		
-		if (admin.tableExists(tableName) == true){
-			//每个卫星单独的表采用时间翻转作为行键
-			dateReversed = new StringBuffer(df.format(new Date())).reverse().toString();
-			rowKey = dateReversed;
-			Table table = connection.getTable(tableName);
-			Put p = getPut(rootmap, rowKey);
-			table.put(p);
-			table.close();
-		}
-		else{
-			LOG.warn("DATA DISCARED CAUSE NO SMALL TABLE CAN BE CONNECTED");
-		}
-	}
-	
-	/**
-	 * create a table witch can hold all the data from all the sat. the table name is 'SATALL'.
-	 * the rowkey of the table is the reversion of time and satid.
-	 * @param rootmap hashmap parsed from xml
-	 * @throws Exception
-	 */
-	private void operateWithBigTable(HashMap<String, HashMap<String, String>> rootmap) throws Exception {
-		// TODO operateWithBigTable	
-		//总表的表名为	SATALL
-		TableName tableName = TableName.valueOf(Bytes.toBytes("SATALL"));
-		boolean isTableExists = admin.tableExists(tableName);
-		if (isTableExists == false){
-			LOG.info("BIG TABLE:" + tableName.getNameAsString() + "DOES NOT EXIST, CREATE NOW");
-			try{
-				createTable(tableName);
-			}catch (Exception e){			
-				e.printStackTrace();
-				LOG.fatal("TABLE CREATED FAILED");
-			}
-		}
-		
-		if (admin.tableExists(tableName) == true){
-			//大表采用翻转时间+卫星id作为行键
-			dateReversed = new StringBuffer(df.format(new Date())).reverse().toString();
-			rowKey = dateReversed + rootmap.get("satinfo").get("satid");
-			Table table = connection.getTable(tableName);
-			Put p = getPut(rootmap, rowKey);
-			table.put(p);
-			table.close();
-		}
-		else{
-			LOG.warn("DATA DISCARED CAUSE NO BIG TABLE CAN BE CONNECTED");
-		}
-	}
-	
-	/**
-	 * get Put from hashmap and rowkey, which will insert to the table.
+	 * 根据hashmap和rowkey创建一个能够插入到表中的Put实例
 	 * @param map hashmap that parsed from xml
 	 * @param rowKey rowkey of the hbase table
 	 * @return hbase.client.Put
 	 */
-	private Put getPut(HashMap<String, HashMap<String, String>> map, String rowKey){
+	private Put getPut(HashMap<String, HashMap<String, String>> rootmap, String rowKey){
 		Put p = new Put(Bytes.toBytes(rowKey));
-		//遍历hashmap插入数据
-		for (Entry<String, HashMap<String, String>> entry1 : map.entrySet()){
+		for (Entry<String,HashMap<String, String>> entry1 : rootmap.entrySet()){
 			String familyName = entry1.getKey();
+			//tabletype是每个xml都有的，satname是只有第三类表才有的，用来指定卫星实时数据是哪个卫星，这里的satname是xml中的第一级,xmlroot:satname:name
+			//在第一类表中也有satname，但是它是第二级中的,xmlroot:inf:satname，两个satname不要混淆
+			if (familyName.equals("tabletype") || familyName.equals("satname")) continue;
 			HashMap<String, String> value1 = entry1.getValue();
 			for (Entry<String, String> entry2 : value1.entrySet()){
 				String qualifier = entry2.getKey();
@@ -163,32 +81,79 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 		return p;
 	}
 	
+	/**
+	 * 根据表名称和类型码创建一个表，每个表有不一样的列族
+	 * @param tableName 表名称
+	 * @param typeId 表类型码
+	 * @throws IOException
+	 */
+	private void createTable(TableName tableName, String typeId) throws IOException{
+		HTableDescriptor descriptor = new HTableDescriptor(tableName);
+		//对应三个基本表各自不同的列族
+		if (typeId.equals("1"))
+			families = new String[]{"inf"};
+		else if (typeId.equals("2"))
+			families = new String[]{"inf"};
+		else if (typeId.equals("3"))
+			families = new String[]{"Command","track","obc","power","GNC","com"};
+		
+		for (String family : families){
+			HColumnDescriptor cd = new HColumnDescriptor(family);
+			descriptor.addFamily(cd);
+		}
+		admin.createTable(descriptor);
+	}
 	
-	
-	private void operateWithId1(HashMap<String, HashMap<String, String>> rootmap){
-		int id = 1;
-		TableName tablename = TableName.valueOf(Bytes.toBytes("SatInf"));
-		boolean isTableExists = admin.tableExists(tablename);
+	/**
+	 * 根据rootmap和typeid创建尚未创建的表，并插入数据
+	 * @param rootmap 由xml解析得到的hashmap
+	 * @param typeId id = 1:SatInf	记录每个卫星的基本信息
+		 			 id = 2:TTCInf	记录每个测控站的基本信息
+		 			 id = 3:SatName	卫星实时数据
+	 * @throws IOException
+	 */
+	private void operateWithTable(HashMap<String, HashMap<String, String>> rootmap,String typeId) throws IOException{
+		TableName tableName = null;
+		if (typeId.equals("1"))
+			tableName = TableName.valueOf(Bytes.toBytes("SatInf"));
+		else if (typeId.equals("2"))
+			tableName = TableName.valueOf(Bytes.toBytes("TTCInf"));
+		else if (typeId.equals("3"))
+			tableName = TableName.valueOf(Bytes.toBytes(rootmap.get("satname").get("name")));
+		
+		boolean isTableExists = admin.tableExists(tableName);
 		
 		if (isTableExists == false){
-			LOG.info("table:"+tablename+" does not exist,create now");
+			LOG.info("table:"+tableName+" does not exist,create now");
 			try{
-				createTable(tableName);
+				createTable(tableName,typeId);
 			}catch(Exception e){
 				e.printStackTrace();
 				LOG.fatal("table created failed");
 			}
 		}
 		
-		if (admin.tableExists(tablename) == true){
-			rowKey = rootmap.get("inf").get("satname");
-			Table table = connection.getTable(tablename);
-			
-			Put p = new Put(Bytes.toBytes(rowKey));
-			for (Entry<String,HashMap<String, String>> entry1 : rootmap.entrySet()){
-				String familyName = entry1.getKey();
-				if (familyName.equals("tabletype")) continue;
-				
+		if (admin.tableExists(tableName) == true){
+			if (typeId.equals("1")){
+				rowKey = rootmap.get("inf").get("satname");
+				Table table = connection.getTable(tableName);
+				Put p = getPut(rootmap, rowKey);		
+				table.put(p);
+				table.close();
+			}
+			else if (typeId.equals("2")){
+				rowKey = rootmap.get("inf").get("devname");
+				Table table = connection.getTable(tableName);
+				Put p = getPut(rootmap, typeId);
+				table.put(p);
+				table.close();
+			}
+			else if (typeId.equals("3")){
+				rowKey = new StringBuffer(df.format(new Date())).toString();
+				Table table = connection.getTable(tableName);
+				Put p = getPut(rootmap, typeId);
+				table.put(p);
+				table.close();
 			}
 		}
 	}
@@ -207,24 +172,10 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 		 * id = 2:TTCInf	记录每个测控站的基本信息
 		 * id = 3:SatName	卫星实时数据
 		 */
-		//TODO not finised
-		String typeid = rootmap.get("tabletype").get("typeid");
-		if (typeid != null){
+		String typeId = rootmap.get("tabletype").get("typeid");
+		if (typeId != null){
 			try{
-				if (typeid.equals("1"))
-					operateWithId1(rootmap);
-			}catch (Exception e){
-				e.printStackTrace();
-			}
-			try{
-				if (typeid.equals("2"))
-					operateWithId2(rootmap);
-			}catch (Exception e){
-				e.printStackTrace();
-			}
-			try{
-				if (typeid.equals("3"))
-					operateWithId3(rootmap);
+				operateWithTable(rootmap,typeId);
 			}catch (Exception e){
 				e.printStackTrace();
 			}
