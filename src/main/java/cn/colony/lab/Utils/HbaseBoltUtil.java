@@ -60,7 +60,7 @@ public class HbaseBoltUtil {
 	}
 	
 	/**
-	 * 单例列族
+	 * 单例列族，弃用
 	 * @return String[]
 	 */
 	public static String[] getFamilies(){
