@@ -32,7 +32,7 @@ public class MyKafkaBolt {
     	spoutConf.scheme = new SchemeAsMultiScheme(new StringScheme());
     	spoutConf.zkServers = Arrays.asList(zkServers);
     	spoutConf.zkPort = 2181;
-    	spoutConf.ignoreZkOffsets = false;
+    	spoutConf.ignoreZkOffsets = true;
     	
     	kafkaSpout = new KafkaSpout(spoutConf);
     }
