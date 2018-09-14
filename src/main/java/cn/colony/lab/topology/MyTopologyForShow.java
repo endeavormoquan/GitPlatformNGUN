@@ -16,6 +16,7 @@ import org.apache.storm.topology.TopologyBuilder;
 
 import cn.colony.lab.hbase.MyHbaseBolt;
 import cn.colony.lab.hbase.MyHbaseHashMapBolt;
+import cn.colony.lab.hbase.MyHbaseHashMapBoltForShow;
 import cn.colony.lab.hdfs.MyHDFSBolt;
 import cn.colony.lab.kafka.MyKafkaBolt;
 import cn.colony.lab.storm.MyParseBolt;
@@ -43,7 +44,7 @@ public class MyTopologyForShow {
 		builder.setSpout("kafka-reader", kafkaSpout, 1);
 		builder.setBolt("parse-bolt", new MyParseBolt(), 1).shuffleGrouping("kafka-reader");
 //		builder.setBolt("hdfs-bolt", hdfsBolt, 1).shuffleGrouping("parse-bolt");
-		builder.setBolt("hbase-hashmap-bolt", new MyHbaseHashMapBolt(), 1).shuffleGrouping("parse-bolt");
+		builder.setBolt("hbase-hashmap-bolt", new MyHbaseHashMapBoltForShow(), 1).shuffleGrouping("parse-bolt");
 		
 		Config conf = new Config();
 		conf.put(Config.NIMBUS_HOST, "master");
