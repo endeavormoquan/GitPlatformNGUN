@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>cn.colony</groupId>
   <artifactId>GitPlatformNGUN</artifactId>
-  <version>1.0</version>
+  <version>2.0</version>
   
   
   <build>
@@ -28,7 +28,7 @@
              	 	                implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
              		       		<transformer
             		                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-            		            	<mainClass>cn.colony.lab.topology.MyTopology</mainClass>
+            		            	<mainClass>cn.colony.lab.topology.MyTopologyForShow</mainClass>
             		        	</transformer>
              		   		</transformers>
             			</configuration>
