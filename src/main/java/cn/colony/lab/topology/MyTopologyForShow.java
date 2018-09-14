@@ -48,6 +48,6 @@ public class MyTopologyForShow {
 		Config conf = new Config();
 		conf.put(Config.NIMBUS_HOST, "master");
 		conf.setNumWorkers(4);
-		StormSubmitter.submitTopology(MyTopologyForTest.class.getSimpleName(), conf, builder.createTopology());
+		StormSubmitter.submitTopology(MyTopologyForShow.class.getSimpleName(), conf, builder.createTopology());
 	}
 }
