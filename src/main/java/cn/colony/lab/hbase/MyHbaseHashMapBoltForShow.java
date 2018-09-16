@@ -41,6 +41,9 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 	private String[] families = null;
 	private String rowKey = null;
 
+	/**
+	 * 获得HBase的连接和管理员身份，同时为时间戳准备一个df实例
+	 */
 	@Override
 	public void prepare(Map stormConf, TopologyContext context) {
 	try {
@@ -169,6 +172,9 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 		}
 	}
 	
+	/**
+	 * 在prepare之后紧接着执行execute，将jsonString解析成hashmap并调用*operateWithTable*处理HBase表
+	 */
 	@Override
 	public void execute(Tuple tuple, BasicOutputCollector collector) {
 		String input = tuple.getString(0);//收到的是json string
@@ -200,6 +206,11 @@ public class MyHbaseHashMapBoltForShow extends BaseBasicBolt{
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {}
 
+	
+	/**
+	 * 测试xml->jsonString->hashmap整个流程
+	 * 提示xml格式、各个函数的调用方法
+	 */
 	@Test
 	public void testParseJsonStringToHashmap(){
 		String xml = null;
