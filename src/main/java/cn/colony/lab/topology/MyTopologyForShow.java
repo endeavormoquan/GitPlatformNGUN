@@ -25,6 +25,13 @@ public class MyTopologyForShow {
 
 	private static final Log LOG = LogFactory.getLog(MyTopologyForShow.class);
 	
+	/**
+	 * 定义一个拓扑的结构，并设置并发
+	 * @param args
+	 * @throws AlreadyAliveException
+	 * @throws InvalidTopologyException
+	 * @throws AuthorizationException
+	 */
 	public static void main(String[] args) throws AlreadyAliveException, InvalidTopologyException, AuthorizationException{
 		
 		//create a kafka spout
